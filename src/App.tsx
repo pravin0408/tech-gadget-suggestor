@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from './firebase';
-import { Activity, Battery, Cpu, Wifi, Zap, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Activity, Zap, ExternalLink, ShieldCheck } from 'lucide-react';
 
 interface Gadget {
   id: string;
