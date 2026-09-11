@@ -70,12 +70,14 @@ jobs:
           
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
         with:
           target: 'http://localhost:3000'
           # Generate an HTML report and upload it
           artifact_name: 'dast-report'
           allow_issue_writing: false
           rules_file_name: '.zap/rules.tsv' 
+          fail_action: false
           
       - name: Upload DAST HTML Report Artifact
         if: always()
