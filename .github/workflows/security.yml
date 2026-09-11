@@ -1,0 +1,85 @@
+name: Security Review (SAST & DAST)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '20 4 * * 1' # Runs every Monday at 04:20 UTC
+
+jobs:
+  sast-codeql:
+    name: "SAST: CodeQL Analysis"
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript,typescript"
+
+  sast-lint:
+    name: "SAST: Secure Code Review (Lint)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Dependencies
+        run: npm ci
+      - name: Code Review via Linter
+        run: npm run lint
+
+  dast-zap:
+    name: "DAST: OWASP ZAP Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Install dependencies & Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start Production Server
+        run: |
+          npx serve -s dist -l 3000 &
+          sleep 5
+          
+      - name: Run OWASP ZAP DAST Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000'
+          # Generate an HTML report and upload it
+          artifact_name: 'dast-report'
+          allow_issue_writing: false
+          rules_file_name: '.zap/rules.tsv' 
+          
+      - name: Upload DAST HTML Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZAP-DAST-Report
+          path: report_html.html
