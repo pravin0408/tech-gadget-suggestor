@@ -1,17 +1,12 @@
 import type {
   DeviceSpec,
   Recommendation,
-  WizardState,
   UseCase,
   FormFactor,
   BatteryPriority,
-  LifecyclePosition,
 } from '../types/index';
 import {
-  getCurrentTimestamp,
-  getRuntimeYear,
   getLifecycleAdvice,
-  isDeviceCurrent,
 } from '../lib/temporal';
 import { DEVICE_CATALOG_2026 } from '../data/devices2026';
 
@@ -853,8 +848,7 @@ function generateTags(
 
 /** Generate lifecycle-aware buying advice for a device */
 function buildBuyingAdvice(device: DeviceSpec): string {
-  const advice = getLifecycleAdvice(device);
-  const current = isDeviceCurrent(device);
+  const advice = getLifecycleAdvice(device.lifecyclePosition, device.expectedSuccessorDate);
 
   if (device.lifecyclePosition === 'end-of-life') {
     const successorPart = device.expectedSuccessorDate
